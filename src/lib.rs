@@ -89,9 +89,9 @@ impl Ds18b20 {
         T: OutputPin<Error = E>,
     {
         onewire.send_command(commands::WRITE_SCRATCHPAD, Some(&self.address)).await?;
-        onewire.write_byte(alarm_temp_high.to_ne_bytes()[0]).await?;
-        onewire.write_byte(alarm_temp_low.to_ne_bytes()[0]).await?;
-        onewire.write_byte(resolution.to_config_register()).await?;
+        onewire.write_byte(alarm_temp_high.to_ne_bytes()[0])?;
+        onewire.write_byte(alarm_temp_low.to_ne_bytes()[0])?;
+        onewire.write_byte(resolution.to_config_register())?;
         Ok(())
     }
 
@@ -127,8 +127,8 @@ where
     T: OutputPin<Error = E>,
 {
     onewire.reset().await?;
-    onewire.skip_address().await?;
-    onewire.write_byte(commands::CONVERT_TEMP).await?;
+    onewire.skip_address()?;
+    onewire.write_byte(commands::CONVERT_TEMP)?;
     Ok(())
 }
 
@@ -163,10 +163,10 @@ where
     T: OutputPin<Error = E>,
 {
     onewire.reset().await?;
-    onewire.match_address(address).await?;
-    onewire.write_byte(commands::READ_SCRATCHPAD).await?;
+    onewire.match_address(address)?;
+    onewire.write_byte(commands::READ_SCRATCHPAD)?;
     let mut scratchpad = [0; 9];
-    onewire.read_bytes(&mut scratchpad).await?;
+    onewire.read_bytes(&mut scratchpad)?;
     check_crc8(&scratchpad)?;
     Ok(scratchpad)
 }
@@ -214,7 +214,7 @@ where
     // wait for the recall to finish (up to 10ms)
     let max_retries = (10000 / one_wire_bus::READ_SLOT_DURATION_MICROS) + 1;
     for _ in 0..max_retries {
-        if onewire.read_bit().await? == true {
+        if onewire.read_bit()? == true {
             return Ok(());
         }
     }
